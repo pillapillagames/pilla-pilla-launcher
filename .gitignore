@@ -1,0 +1,40 @@
+# Dependencias
+node_modules/
+
+# Build / empaquetado (electron-builder, electron-forge, etc.)
+dist/
+out/
+build/
+release/
+
+# Datos de usuario / runtime (NO son código fuente, se generan al ejecutar)
+license.token
+device-id.txt
+local-manifest.json
+legal-acceptance.json
+game/
+Cache/
+GPUCache/
+DawnWebGPUCache/
+DawnGraphiteCache/
+Code Cache/
+Local Storage/
+Session Storage/
+Network/
+Shared Dictionary/
+SharedStorage/
+blob_storage/
+Preferences
+Local State
+
+# Variables de entorno / secretos locales
+.env
+.env.local
+
+# Sistema
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/

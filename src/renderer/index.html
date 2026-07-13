@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<title>Pilla Pilla Launcher</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <div class="bg-glow"></div>
+  <img class="corner-logo" src="../../assets/logo.png" alt="Pilla Pilla" />
+
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-dot"></span>
+      PILLA PILLA MULTIJUGADOR
+    </div>
+    <button id="logoutBtn" class="link-btn hidden">Cerrar sesión</button>
+  </header>
+
+  <main>
+
+    <!-- Pantalla: aceptación legal (primer arranque o cambio de versión legal) -->
+    <section id="screen-legal-gate" class="screen hidden">
+      <div class="card wide">
+        <h1>Antes de empezar</h1>
+        <p class="subtitle">Este launcher no usa cookies de navegador. Sí guarda localmente tu licencia y un identificador de dispositivo para validar tu compra. Lee cómo tratamos tus datos antes de continuar.</p>
+
+        <div class="legal-links-row">
+          <button type="button" class="legal-link" data-tab="terminos">Términos de Uso</button>
+          <button type="button" class="legal-link" data-tab="privacidad">Política de Privacidad</button>
+          <button type="button" class="legal-link" data-tab="aviso">Aviso Legal</button>
+        </div>
+
+        <label class="checkbox-row">
+          <input type="checkbox" id="legalCheckbox" />
+          <span>He leído y acepto los Términos de Uso y la Política de Privacidad.</span>
+        </label>
+
+        <button id="acceptLegalBtn" class="primary-btn" disabled>Aceptar y continuar</button>
+      </div>
+    </section>
+
+    <!-- Pantalla: introducir key -->
+    <section id="screen-key" class="screen hidden">
+      <div class="card">
+        <h1>Activa tu juego</h1>
+        <p class="subtitle">Introduce la key que recibiste al comprar Pilla Pilla.</p>
+        <input id="keyInput" type="text" placeholder="PILLA-XXXX-XXXX-XXXX-XXXX" autocomplete="off" spellcheck="false" />
+        <button id="activateBtn" class="primary-btn">Activar</button>
+        <p id="keyError" class="error-text hidden"></p>
+      </div>
+    </section>
+
+    <!-- Pantalla: launcher principal -->
+    <section id="screen-main" class="screen hidden">
+      <div class="card wide">
+        <h1>Pilla Pilla</h1>
+        <p class="subtitle" id="statusText">Listo para jugar</p>
+
+        <div id="progressWrap" class="progress-wrap hidden">
+          <div class="progress-bar-bg">
+            <div id="progressBar" class="progress-bar-fill"></div>
+          </div>
+          <p id="progressLabel" class="progress-label"></p>
+        </div>
+
+        <button id="playBtn" class="primary-btn play-btn">Jugar</button>
+        <p id="playError" class="error-text hidden"></p>
+
+        <!-- Estadísticas del jugador, sincronizadas con el servidor -->
+        <div id="playerStatsBox" class="player-stats hidden">
+          <div class="stat-row">
+            <span class="stat-icon">🪙</span>
+            <span id="statCoins">0</span>
+          </div>
+          <div class="stat-row-sub">
+            <span id="statSurvival">Mejor supervivencia: 0s</span>
+            <span class="stat-dot">·</span>
+            <span id="statCatches">Pilladas totales: 0</span>
+          </div>
+          <div class="stat-row-sub stat-progress">
+            <span id="statLevel">Nivel 1 (0/100 XP)</span>
+            <span class="stat-dot">·</span>
+            <span id="statRank">🏆 Sin rango</span>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="discord-section">
+          <div class="discord-info">
+            <svg class="discord-icon" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+              <path d="M9 12a1.2 1.2 0 1 0 0-2.4A1.2 1.2 0 0 0 9 12Zm6 0a1.2 1.2 0 1 0 0-2.4A1.2 1.2 0 0 0 15 12Z"/>
+              <path d="M17.5 5.5c-1.1-.5-2.3-.9-3.5-1.1l-.2.4c1 .2 2 .6 2.9 1.1-2.9-1.3-6.6-1.3-9.4 0 .9-.5 1.9-.9 2.9-1.1l-.2-.4c-1.2.2-2.4.6-3.5 1.1C4.1 8.5 3.4 11.5 3.7 14.5c1.3 1 2.8 1.7 4.3 2.1l.6-1c-.8-.3-1.6-.7-2.3-1.2.2.1.4.3.6.4 3 1.7 6.6 1.7 9.6 0 .2-.1.4-.3.6-.4-.7.5-1.5.9-2.3 1.2l.6 1c1.5-.4 3-1.1 4.3-2.1.4-3.5-.5-6.5-2.2-9Z"/>
+            </svg>
+            <div>
+              <p class="discord-title">Únete a la comunidad</p>
+              <p class="discord-subtitle">Encuentra grupo, reporta bugs y habla con otros jugadores</p>
+            </div>
+          </div>
+          <button id="discordBtn" class="discord-btn">Discord</button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="version-footer">
+    <span id="versionText">v1.0.0</span>
+    <span class="footer-sep">·</span>
+    <button type="button" class="legal-link footer-link" data-tab="terminos">Términos</button>
+    <span class="footer-sep">·</span>
+    <button type="button" class="legal-link footer-link" data-tab="privacidad">Privacidad</button>
+    <span class="footer-sep">·</span>
+    <button type="button" class="legal-link footer-link" data-tab="aviso">Aviso Legal</button>
+  </footer>
+
+  <!-- Modal: documentos legales -->
+  <div id="legalModal" class="modal-overlay hidden">
+    <div class="modal-box">
+      <div class="modal-tabs">
+        <button type="button" class="modal-tab active" data-tab="terminos">Términos de Uso</button>
+        <button type="button" class="modal-tab" data-tab="privacidad">Privacidad</button>
+        <button type="button" class="modal-tab" data-tab="aviso">Aviso Legal</button>
+        <button id="closeLegalModal" class="modal-close" aria-label="Cerrar">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="modal-panel" data-panel="terminos">
+          <h2>Términos de Uso</h2>
+          <p class="legal-updated">Última actualización: versión 1.0</p>
+
+          <h3>1. Objeto</h3>
+          <p>Estos Términos regulan el uso del launcher y del videojuego "Pilla Pilla" (en adelante, "el Software"), propiedad de Propelfunding. El acceso al Software requiere una key de licencia válida, personal e intransferible.</p>
+
+          <h3>2. Licencia de uso</h3>
+          <p>Se concede una licencia limitada, no exclusiva e intransferible para instalar y ejecutar el Software en los dispositivos vinculados a tu licencia. Queda prohibida la redistribución, ingeniería inversa, reventa o explotación comercial del Software sin autorización expresa.</p>
+
+          <h3>3. Cuenta y dispositivo</h3>
+          <p>Cada key puede vincularse a un número limitado de dispositivos mediante un identificador único de hardware. Propelfunding puede revocar el acceso ante un uso fraudulento, copia no autorizada de la key o incumplimiento de estos Términos.</p>
+
+          <h3>4. Actualizaciones</h3>
+          <p>El launcher descarga automáticamente las actualizaciones necesarias para ejecutar el Software. La disponibilidad del servicio puede verse afectada por mantenimiento, causas de fuerza mayor o decisiones del proveedor.</p>
+
+          <h3>5. Comunidad de Discord</h3>
+          <p>El acceso al servidor de Discord vinculado es opcional y se rige por las condiciones y normas de comunidad propias de Discord Inc., ajenas a Propelfunding.</p>
+
+          <h3>6. Limitación de responsabilidad</h3>
+          <p>El Software se ofrece "tal cual". Propelfunding no garantiza la ausencia total de errores y no se responsabiliza de daños indirectos derivados del uso del Software, dentro de los límites permitidos por la ley.</p>
+
+          <h3>7. Legislación aplicable</h3>
+          <p>Estos Términos se rigen por la legislación española. Para cualquier controversia, las partes se someten a los juzgados y tribunales que correspondan según la normativa de consumidores aplicable.</p>
+        </div>
+
+        <div class="modal-panel hidden" data-panel="privacidad">
+          <h2>Política de Privacidad</h2>
+          <p class="legal-updated">Última actualización: versión 1.0</p>
+
+          <h3>1. Responsable del tratamiento</h3>
+          <p>Propelfunding es el responsable del tratamiento de los datos descritos en esta política. Contacto: contacto@pillapilla.com.</p>
+
+          <h3>2. ¿Qué datos tratamos?</h3>
+          <p>Este launcher es una aplicación de escritorio y no utiliza cookies de navegador. Los datos que tratamos son:</p>
+          <ul>
+            <li><strong>Key de licencia</strong>, para validar tu compra.</li>
+            <li><strong>Identificador de dispositivo</strong> (hash generado localmente, no identifica a la persona directamente), para limitar el número de equipos por licencia.</li>
+            <li><strong>Token de sesión</strong>, guardado cifrado en tu equipo, para mantener la sesión iniciada.</li>
+            <li><strong>Dirección IP y registros técnicos de conexión</strong> al servidor, con fines de seguridad y prevención de fraude.</li>
+          </ul>
+          <p>No recopilamos datos de navegación, contactos, ni contenido de tus archivos.</p>
+
+          <h3>3. Finalidad y base legal</h3>
+          <p>Tratamos estos datos para la ejecución del contrato de licencia (art. 6.1.b RGPD) y, en el caso de los registros de seguridad, por interés legítimo en prevenir el fraude (art. 6.1.f RGPD).</p>
+
+          <h3>4. Conservación</h3>
+          <p>Los datos se conservan mientras la licencia esté activa y, tras su baja, durante el plazo necesario para cumplir obligaciones legales o resolver disputas.</p>
+
+          <h3>5. Destinatarios</h3>
+          <p>No cedemos tus datos a terceros salvo obligación legal o proveedores de infraestructura (hosting) que actúan como encargados del tratamiento bajo contrato.</p>
+
+          <h3>6. Tus derechos</h3>
+          <p>Puedes ejercer tus derechos de acceso, rectificación, supresión, oposición, limitación y portabilidad escribiendo a contacto@pillapilla.com. También puedes reclamar ante la Agencia Española de Protección de Datos (AEPD).</p>
+
+          <h3>7. Datos almacenados localmente</h3>
+          <p>El launcher guarda en tu equipo (no en la nube) tu token de sesión y el manifiesto de versión instalada. Puedes eliminarlos cerrando sesión o desinstalando la aplicación.</p>
+        </div>
+
+        <div class="modal-panel hidden" data-panel="aviso">
+          <h2>Aviso Legal</h2>
+          <p class="legal-updated">Última actualización: versión 1.0</p>
+
+          <h3>1. Identificación</h3>
+          <p>En cumplimiento del deber de información de la Ley 34/2002 (LSSI-CE), se informa de que este Software es distribuido por Propelfunding. Contacto: contacto@pillapilla.com.</p>
+
+          <h3>2. Propiedad intelectual</h3>
+          <p>El código, los assets gráficos, sonoros y de diseño de "Pilla Pilla" son propiedad de Propelfunding o de sus licenciantes, y están protegidos por la normativa de propiedad intelectual vigente. Queda prohibida su reproducción total o parcial sin autorización.</p>
+
+          <h3>3. Marcas de terceros</h3>
+          <p>Discord es una marca registrada de Discord Inc. Su mención en este launcher tiene fines meramente informativos de interoperabilidad y no implica relación comercial ni patrocinio.</p>
+
+          <h3>4. Exactitud de la información</h3>
+          <p>Propelfunding realiza esfuerzos razonables para mantener actualizada la información del launcher (versión del juego, estado de los servidores) pero no garantiza su exactitud absoluta en todo momento.</p>
+
+          <h3>5. Modificaciones</h3>
+          <p>Propelfunding puede modificar este Aviso Legal, los Términos de Uso y la Política de Privacidad. Los cambios sustanciales requerirán una nueva aceptación por tu parte antes de continuar usando el Software.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="renderer.js"></script>
+</body>
+</html>
