@@ -1,8 +1,9 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('pillaAPI', {
+  loginWithGoogle: () => ipcRenderer.invoke('login-google'),
+  checkSession: () => ipcRenderer.invoke('check-session'),
   activateKey: (key) => ipcRenderer.invoke('activate-key', key),
-  checkExistingLicense: () => ipcRenderer.invoke('check-existing-license'),
   logout: () => ipcRenderer.invoke('logout'),
   startUpdateAndPlay: () => ipcRenderer.invoke('start-update-and-play'),
   getVersionInfo: () => ipcRenderer.invoke('get-version-info'),

@@ -1,10 +1,10 @@
 const { app, BrowserWindow, ipcMain, shell } = require('electron');
 const path = require('path');
+const http = require('http');
 const { spawn } = require('child_process');
 const fs = require('fs');
 
 const { API_BASE_URL, DISCORD_INVITE_URL, LEGAL_VERSION } = require('./config');
-const { getDeviceId } = require('./deviceId');
 const { saveToken, loadToken, clearToken } = require('./tokenStore');
 const { checkAndUpdate, getPlayExecutablePath, isGameInstalled, loadLocalManifest } = require('./updater');
 const { saveAcceptance, hasAccepted } = require('./legalStore');
@@ -33,45 +33,115 @@ app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();
 });
 
-// --- IPC: activar una key nueva ---
-ipcMain.handle('activate-key', async (_event, key) => {
-  try {
-    const deviceId = getDeviceId();
-    const res = await fetch(`${API_BASE_URL}/api/license/activate`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ key, deviceId }),
+// --- IPC: iniciar sesión con Google ---
+// Abre el navegador del sistema en /auth/google del servidor, y levanta un
+// mini-servidor local en un puerto libre para recibir el token cuando Google
+// termine el login. El servidor debe redirigir a redirect_uri con ?token=...
+ipcMain.handle('login-google', async () => {
+  return new Promise((resolve) => {
+    let settled = false;
+    const finish = (result) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timeout);
+      try { server.close(); } catch (e) { /* noop */ }
+      resolve(result);
+    };
+
+    const server = http.createServer((req, res) => {
+      let url;
+      try {
+        url = new URL(req.url, 'http://127.0.0.1');
+      } catch (e) {
+        res.writeHead(400).end();
+        return;
+      }
+
+      if (url.pathname !== '/callback') {
+        res.writeHead(404).end();
+        return;
+      }
+
+      const token = url.searchParams.get('token');
+      const error = url.searchParams.get('error');
+
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+      res.end(
+        token
+          ? '<html><body style="font-family:sans-serif;text-align:center;padding-top:80px;"><h2>Sesión iniciada ✅</h2><p>Ya puedes cerrar esta pestaña y volver al launcher.</p></body></html>'
+          : '<html><body style="font-family:sans-serif;text-align:center;padding-top:80px;"><h2>No se pudo iniciar sesión</h2><p>Cierra esta pestaña e inténtalo de nuevo desde el launcher.</p></body></html>'
+      );
+
+      if (token) {
+        saveToken(token);
+        finish({ ok: true });
+      } else {
+        finish({ ok: false, error: error || 'Login cancelado.' });
+      }
     });
-    const data = await res.json();
-    if (!res.ok || !data.ok) {
-      return { ok: false, error: data.error || 'No se pudo activar la key.' };
-    }
-    saveToken(data.token);
-    return { ok: true };
-  } catch (err) {
-    return { ok: false, error: 'No se pudo conectar con el servidor. ¿Tienes internet?' };
-  }
+
+    const timeout = setTimeout(() => {
+      finish({ ok: false, error: 'Tiempo de espera agotado. Inténtalo de nuevo.' });
+    }, 5 * 60 * 1000);
+
+    server.on('error', () => {
+      finish({ ok: false, error: 'No se pudo abrir el puerto local para el login.' });
+    });
+
+    server.listen(0, '127.0.0.1', () => {
+      const port = server.address().port;
+      const redirectUri = `http://127.0.0.1:${port}/callback`;
+      const authUrl = `${API_BASE_URL}/auth/google?redirect_uri=${encodeURIComponent(redirectUri)}`;
+      shell.openExternal(authUrl);
+    });
+  });
 });
 
-// --- IPC: comprobar si ya hay una licencia guardada y sigue siendo válida ---
-ipcMain.handle('check-existing-license', async () => {
+// --- IPC: comprobar si hay sesión de Google guardada y si esa cuenta tiene licencia activa ---
+ipcMain.handle('check-session', async () => {
   const token = loadToken();
-  if (!token) return { ok: false };
+  if (!token) return { ok: false, loggedIn: false };
 
   try {
-    const res = await fetch(`${API_BASE_URL}/api/license/validate`, {
-      method: 'POST',
+    const res = await fetch(`${API_BASE_URL}/api/session/validate`, {
+      method: 'GET',
       headers: { Authorization: `Bearer ${token}` },
     });
     const data = await res.json();
     if (!res.ok || !data.ok) {
       clearToken();
-      return { ok: false };
+      return { ok: false, loggedIn: false };
     }
-    return { ok: true, gameInstalled: isGameInstalled() };
+    return { ok: true, loggedIn: true, hasLicense: !!data.hasLicense, user: data.user || null };
   } catch (err) {
-    // Sin conexión: dejamos jugar si el juego ya está instalado (modo offline básico)
-    return { ok: isGameInstalled(), offline: true };
+    // Sin conexión: si el juego ya está instalado, dejamos entrar en modo offline básico
+    return { ok: false, loggedIn: true, hasLicense: isGameInstalled(), offline: true };
+  }
+});
+
+// --- IPC: canjear/activar una key en la cuenta ya logueada ---
+ipcMain.handle('activate-key', async (_event, key) => {
+  const token = loadToken();
+  if (!token) {
+    return { ok: false, error: 'Debes iniciar sesión con Google primero.' };
+  }
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/redeem`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ key }),
+    });
+    const data = await res.json();
+    if (!res.ok || !data.ok) {
+      return { ok: false, error: data.error || 'No se pudo activar la key.' };
+    }
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, error: 'No se pudo conectar con el servidor. ¿Tienes internet?' };
   }
 });
 

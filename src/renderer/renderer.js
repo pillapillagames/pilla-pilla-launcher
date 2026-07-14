@@ -1,7 +1,12 @@
 const screenLegalGate = document.getElementById('screen-legal-gate');
+const screenLogin = document.getElementById('screen-login');
 const screenKey = document.getElementById('screen-key');
 const screenMain = document.getElementById('screen-main');
 const logoutBtn = document.getElementById('logoutBtn');
+
+const googleLoginBtn = document.getElementById('googleLoginBtn');
+const googleBtnLabel = document.getElementById('googleBtnLabel');
+const loginError = document.getElementById('loginError');
 
 const keyInput = document.getElementById('keyInput');
 const activateBtn = document.getElementById('activateBtn');
@@ -38,12 +43,17 @@ let pendingScreen = null;
 
 function showScreen(name) {
   screenLegalGate.classList.add('hidden');
+  screenLogin.classList.add('hidden');
   screenKey.classList.add('hidden');
   screenMain.classList.add('hidden');
   logoutBtn.classList.add('hidden');
 
   if (name === 'legal-gate') screenLegalGate.classList.remove('hidden');
-  if (name === 'key') screenKey.classList.remove('hidden');
+  if (name === 'login') screenLogin.classList.remove('hidden');
+  if (name === 'key') {
+    screenKey.classList.remove('hidden');
+    logoutBtn.classList.remove('hidden'); // ya hay sesión de Google iniciada
+  }
   if (name === 'main') {
     screenMain.classList.remove('hidden');
     logoutBtn.classList.remove('hidden');
@@ -113,7 +123,27 @@ legalCheckbox.addEventListener('change', () => {
 
 acceptLegalBtn.addEventListener('click', async () => {
   await window.pillaAPI.acceptLegal();
-  await continueAfterLegalGate();
+  await continueFlow();
+});
+
+// --- Iniciar sesión con Google ---
+googleLoginBtn.addEventListener('click', async () => {
+  loginError.classList.add('hidden');
+  googleLoginBtn.disabled = true;
+  googleBtnLabel.textContent = 'Esperando a Google...';
+
+  const result = await window.pillaAPI.loginWithGoogle();
+
+  googleLoginBtn.disabled = false;
+  googleBtnLabel.textContent = 'Continuar con Google';
+
+  if (!result.ok) {
+    loginError.textContent = result.error || 'No se pudo iniciar sesión.';
+    loginError.classList.remove('hidden');
+    return;
+  }
+
+  await continueFlow();
 });
 
 // --- Activación de key nueva ---
@@ -181,7 +211,7 @@ window.pillaAPI.onDownloadProgress((progress) => {
 logoutBtn.addEventListener('click', async () => {
   await window.pillaAPI.logout();
   keyInput.value = '';
-  showScreen('key');
+  showScreen('login');
 });
 
 // --- Discord: abrir invitación a la comunidad ---
@@ -197,14 +227,17 @@ discordBtn.addEventListener('click', async () => {
     : `Launcher v${info.launcherVersion}`;
 })();
 
-// --- Una vez superada (o no necesaria) la pantalla legal, seguimos el flujo normal ---
-async function continueAfterLegalGate() {
-  const check = await window.pillaAPI.checkExistingLicense();
-  if (check.ok) {
-    showScreen('main');
-  } else {
-    showScreen('key');
+// --- Una vez superada (o no necesaria) la pantalla legal, seguimos el flujo normal:
+// 1) ¿hay sesión de Google guardada? -> si no, pantalla de login
+// 2) si hay sesión, ¿la cuenta ya tiene una key activa? -> si no, pantalla de key
+// 3) si tiene key activa -> directo al launcher principal
+async function continueFlow() {
+  const session = await window.pillaAPI.checkSession();
+  if (!session.loggedIn) {
+    showScreen('login');
+    return;
   }
+  showScreen(session.hasLicense ? 'main' : 'key');
 }
 
 // --- Al arrancar: primero comprobamos si falta aceptar términos/privacidad ---
@@ -214,5 +247,5 @@ async function continueAfterLegalGate() {
     showScreen('legal-gate');
     return;
   }
-  await continueAfterLegalGate();
+  await continueFlow();
 })();

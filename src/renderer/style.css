@@ -149,6 +149,27 @@ input:focus { border-color: var(--accent); }
 
 .play-btn { padding: 16px; font-size: 17px; margin-top: 10px; }
 
+.google-btn {
+  -webkit-app-region: no-drag;
+  width: 100%;
+  padding: 13px;
+  background: #fff;
+  border: 1px solid var(--panel-border);
+  border-radius: 10px;
+  color: #1f1f1f;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: background 0.2s, transform 0.1s;
+}
+.google-btn:hover { background: #f3f3f3; }
+.google-btn:active { transform: scale(0.98); }
+.google-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
 .error-text {
   color: var(--error);
   font-size: 13px;
