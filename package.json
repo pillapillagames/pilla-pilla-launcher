@@ -1,6 +1,6 @@
 {
   "name": "pilla-pilla-launcher",
-  "version": "1.6.4",
+  "version": "1.6.5",
   "description": "Launcher oficial de Pilla Pilla",
   "main": "src/main.js",
   "scripts": {
