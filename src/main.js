@@ -112,6 +112,16 @@ ipcMain.handle('check-session', async () => {
       clearToken();
       return { ok: false, loggedIn: false };
     }
+
+    // Si el servidor reconoce que esta cuenta ya tiene licencia (aunque el
+    // token guardado localmente fuera solo de sesión, sin licenseId), nos
+    // manda un token de licencia fresco. Lo guardamos para que las próximas
+    // llamadas (stats, manifest...) ya lo usen directamente, sin tener que
+    // volver a canjear la key.
+    if (data.token) {
+      saveToken(data.token);
+    }
+
     return { ok: true, loggedIn: true, hasLicense: !!data.hasLicense, user: data.user || null };
   } catch (err) {
     // Sin conexión: si el juego ya está instalado, dejamos entrar en modo offline básico
