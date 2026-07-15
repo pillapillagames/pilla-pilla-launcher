@@ -139,6 +139,17 @@ ipcMain.handle('activate-key', async (_event, key) => {
     if (!res.ok || !data.ok) {
       return { ok: false, error: data.error || 'No se pudo activar la key.' };
     }
+
+    // El servidor devuelve, junto a { ok: true }, un token NUEVO que ya lleva
+    // el licenseId dentro (el que sirve para que /api/session/validate
+    // reconozca la licencia en futuros arranques). Si no lo guardamos aquí,
+    // en disco se queda el token de sesión viejo (sin licenseId) y el
+    // launcher volverá a pedir la key cada vez, aunque el servidor ya sepa
+    // que esta cuenta tiene una licencia activa.
+    if (data.token) {
+      saveToken(data.token);
+    }
+
     return { ok: true };
   } catch (err) {
     return { ok: false, error: 'No se pudo conectar con el servidor. ¿Tienes internet?' };
