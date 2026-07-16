@@ -113,6 +113,17 @@ h1 {
   margin-bottom: 24px;
 }
 
+.game-banner {
+  display: block;
+  width: 96px;
+  height: 96px;
+  margin: -8px auto 24px;
+  border-radius: 14px;
+  object-fit: cover;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+  border: 1px solid var(--panel-border);
+}
+
 input {
   -webkit-app-region: no-drag;
   width: 100%;
