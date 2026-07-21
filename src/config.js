@@ -15,5 +15,5 @@ module.exports = {
   LEGAL_VERSION: '1.0',
   // Datos del responsable, para Aviso Legal / RGPD / LSSI. Sustituye por los tuyos.
   LEGAL_CONTACT_EMAIL: 'contacto@pillapilla.com',
-  LEGAL_RESPONSIBLE_NAME: 'Pillapillagames',
+  LEGAL_RESPONSIBLE_NAME: 'pillapilla.es',
 };
